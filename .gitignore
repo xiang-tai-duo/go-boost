@@ -1,0 +1,4 @@
+.DS_Store
+vue3/node_modules
+vue3/.vite
+vue3/dist
