@@ -1,0 +1,35 @@
+Font Awesome Free (webfonts)
+============================
+The following files are used by electron/wwwroot but are NOT committed to this
+MIT-licensed repository because they are distributed under their own licenses
+(SIL OFL 1.1 for font files, MIT for CSS/code, CC BY 4.0 for icons):
+
+  fa-brands-400.ttf
+  fa-brands-400.woff2
+  fa-regular-400.ttf
+  fa-regular-400.woff2
+  fa-solid-900.ttf
+  fa-solid-900.woff2
+  font-awesome.min.css
+
+All of these are listed in .gitignore.
+
+How to obtain:
+  Project home : https://fontawesome.com/
+  Source / releases (GitHub):
+    https://github.com/FortAwesome/Font-Awesome/releases
+  Free download (official):
+    https://use.fontawesome.com/releases/v6.7.2/fontawesome-free-6.7.2-web.zip
+
+After downloading fontawesome-free-<version>-web.zip:
+  1. Extract the archive.
+  2. Copy webfonts/fa-*.ttf, webfonts/fa-*.woff2 and css/all.min.css
+     into this directory (electron/wwwroot/webfonts/).
+  3. Rename css/all.min.css to font-awesome.min.css
+     (the HTML references ./webfonts/font-awesome.min.css).
+
+Licenses (must be respected when redistributing):
+  - Fonts : SIL Open Font License 1.1
+  - Code/CSS : MIT License
+  - Icons : CC BY 4.0 License
+  - See: https://fontawesome.com/license/free

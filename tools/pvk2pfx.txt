@@ -1,0 +1,17 @@
+pvk2pfx.exe
+===========
+pvk2pfx.exe is the Microsoft PVK-to-PFX conversion tool, a component of the
+Windows SDK. It is NOT permitted to redistribute the executable itself
+(see the Microsoft Windows SDK license terms).
+
+How to obtain:
+  1. Download and install the Windows SDK (sign-tools component):
+     https://developer.microsoft.com/windows/downloads/windows-sdk/
+
+  2. Or install Visual Studio with the "Desktop development with C++" workload,
+     which includes the Windows SDK.
+
+After installation, pvk2pfx.exe can typically be found under:
+  C:\Program Files (x86)\Windows Kits\10\bin\<SDK_VERSION>\<arch>\pvk2pfx.exe
+
+Do NOT commit pvk2pfx.exe into this repository; it is listed in .gitignore.

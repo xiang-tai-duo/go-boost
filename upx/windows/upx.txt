@@ -1,0 +1,17 @@
+upx.exe
+=======
+UPX (the Ultimate Packer for eXecutables) is licensed under the GNU General
+Public License v2+ (GPL v2). The pre-compiled executable must NOT be committed
+to this MIT-licensed repository; obtain it separately and keep it local.
+
+Project home : https://upx.github.io/
+Source code  : https://github.com/upx/upx
+Releases     : https://github.com/upx/upx/releases
+
+Direct download (this project pins 5.1.1 win64):
+  https://github.com/upx/upx/releases/download/v5.1.1/upx-5.1.1-win64.zip
+
+After extracting, place upx.exe next to this file (upx/windows/).
+It is listed in .gitignore and will not be tracked.
+
+License: GPL v2+ (see https://github.com/upx/upx/blob/master/LICENSE)

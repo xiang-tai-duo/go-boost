@@ -1,0 +1,30 @@
+{
+  "listen": "127.0.0.1:8080",
+  "default_proxy": "",
+  "rules": [
+    {
+      "domain": "*.example.com",
+      "proxy": "http://127.0.0.1:3128"
+    },
+    {
+      "domain": "example.org",
+      "proxy": "http://127.0.0.1:3128"
+    },
+    {
+      "domain": "*.local",
+      "direct": true
+    },
+    {
+      "ip": "192.168.*",
+      "direct": true
+    },
+    {
+      "ip": "10.*",
+      "direct": true
+    },
+    {
+      "ip": "127.0.0.1",
+      "direct": true
+    }
+  ]
+}

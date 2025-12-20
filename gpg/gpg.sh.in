@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+KEY_ID_FILE="$SCRIPT_DIR/gpg-key-id.txt"
+PRIVATE_KEY_FILE="$SCRIPT_DIR/gpg-private.key"
+PUBLIC_KEY_FILE="$SCRIPT_DIR/gpg-public.key"
+
+PROJECT_NAME="__PROJECT_NAME__"
+PACKAGE="__PACKAGE__"
+
+if [ -f "$PRIVATE_KEY_FILE" ] && [ -f "$PUBLIC_KEY_FILE" ] && [ -f "$KEY_ID_FILE" ]; then
+    echo "GPG keys already exist, skipping generation"
+    exit 0
+fi
+
+echo "Generating GPG keys for $PROJECT_NAME..."
+
+GPG_TEMP_HOME=$(mktemp -d)
+chmod 700 "$GPG_TEMP_HOME"
+
+cat > "$GPG_TEMP_HOME/keygen.conf" << EOF
+%no-protection
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
+Name-Real: $PROJECT_NAME Build
+Name-Email: build@localhost
+Expire-Date: 0
+%commit
+EOF
+
+gpg --homedir "$GPG_TEMP_HOME" --batch --gen-key "$GPG_TEMP_HOME/keygen.conf" 2>/dev/null
+
+KEY_ID=$(gpg --homedir "$GPG_TEMP_HOME" --list-keys --with-colons | grep '^pub' | head -1 | cut -d: -f5)
+echo "$KEY_ID" > "$KEY_ID_FILE"
+
+gpg --homedir "$GPG_TEMP_HOME" --armor --export "$KEY_ID" > "$PUBLIC_KEY_FILE"
+gpg --homedir "$GPG_TEMP_HOME" --armor --export-secret-keys "$KEY_ID" > "$PRIVATE_KEY_FILE"
+
+rm -rf "$GPG_TEMP_HOME"
+
+echo "GPG keys generated successfully. Key ID: $KEY_ID"

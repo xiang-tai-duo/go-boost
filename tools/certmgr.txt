@@ -1,0 +1,17 @@
+certmgr.exe
+============
+certmgr.exe is the Microsoft Certificate Manager Tool, a component of the
+Windows SDK / Visual Studio Build Tools. It is NOT permitted to redistribute
+the executable itself (see the Microsoft Windows SDK license terms).
+
+How to obtain:
+  1. Download and install the Windows SDK (sign-tools component):
+     https://developer.microsoft.com/windows/downloads/windows-sdk/
+
+  2. Or install Visual Studio with the "Desktop development with C++" workload,
+     which includes the Windows SDK.
+
+After installation, certmgr.exe can typically be found under:
+  C:\Program Files (x86)\Windows Kits\10\bin\<SDK_VERSION>\<arch>\certmgr.exe
+
+Do NOT commit certmgr.exe into this repository; it is listed in .gitignore.

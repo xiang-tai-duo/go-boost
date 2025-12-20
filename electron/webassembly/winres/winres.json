@@ -1,0 +1,35 @@
+{
+  "RT_GROUP_ICON": {
+    "APP": {
+      "0000": [
+        "app.png"
+      ]
+    }
+  },
+  "RT_VERSION": {
+    "#1": {
+      "0000": {
+        "fixed": {
+          "file_version": "1.0.0.137+97d16734ea94a19bd897b2a8f2469376319b61fe",
+          "product_version": "1.0.0.137+97d16734ea94a19bd897b2a8f2469376319b61fe"
+        },
+        "info": {
+          "0409": {
+            "Comments": "Process Alive Check Utility",
+            "CompanyName": "Go Boost",
+            "FileDescription": "WebAssembly Process Check Utility",
+            "FileVersion": "1.0.0.137+97d16734ea94a19bd897b2a8f2469376319b61fe",
+            "InternalName": "webassembly",
+            "LegalCopyright": "© 2025 Go Boost. All rights reserved.",
+            "LegalTrademarks": "Go Boost",
+            "OriginalFilename": "webassembly.exe",
+            "PrivateBuild": "",
+            "ProductName": "Go Boost WebAssembly",
+            "ProductVersion": "1.0.0.137+97d16734ea94a19bd897b2a8f2469376319b61fe",
+            "SpecialBuild": ""
+          }
+        }
+      }
+    }
+  }
+}
