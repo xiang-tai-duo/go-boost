@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	boost "github.com/xiang-tai-duo/go-boost"
+	. "github.com/xiang-tai-duo/go-boost"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func main() {
 }
 
 func sample_serve_basic_http_server() {
-	serve := boost.NewServe()
+	serve := NewServe()
 
 	// Check if default port 80 is available
 	if !serve.CheckPortAvailable(80) {
@@ -48,7 +48,7 @@ func sample_serve_basic_http_server() {
 }
 
 func sample_serve_http_server_with_routes() {
-	serve := boost.NewServe()
+	serve := NewServe()
 
 	// Check if default port 80 is available
 	if !serve.CheckPortAvailable(80) {
@@ -86,7 +86,7 @@ func sample_serve_http_server_with_routes() {
 }
 
 func sample_serve_https_server_with_tls() {
-	serve := boost.NewServe()
+	serve := NewServe()
 
 	// Check if default port 80 is available
 	if !serve.CheckPortAvailable(80) {
@@ -125,7 +125,7 @@ func sample_serve_main() {
 }
 
 func sample_serve_static_file_server() {
-	serve := boost.NewServe()
+	serve := NewServe()
 
 	// Check if default port 80 is available
 	if !serve.CheckPortAvailable(80) {
