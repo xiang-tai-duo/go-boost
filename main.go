@@ -113,7 +113,7 @@ func main() {
 	}
 
 	// Create HTTP server builder
-	httpBuilder := boost.NewServeBuilder()
+	httpBuilder := boost.NewServe()
 
 	// Register WebSocket handler for HTTP
 	httpBuilder.WebSocket(Config.WebSocketPath, func(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +131,7 @@ func main() {
 	})
 
 	// Create HTTPS server builder
-	httpsBuilder := boost.NewServeBuilder()
+	httpsBuilder := boost.NewServe()
 
 	// Register WebSocket handler for HTTPS
 	httpsBuilder.WebSocket(Config.WebsocketSslPath, func(w http.ResponseWriter, r *http.Request) {
