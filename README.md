@@ -20,14 +20,6 @@ go-boost is a comprehensive Go toolkit designed to simplify common operations in
 - WebSocket client and server functionality
 - JSON operations and utilities
 
-## Installation
-
-Install go-boost using the standard Go get command.
-
-## Design Philosophy
-
-go-boost follows an object-oriented design with structs for each functionality area, supporting method chaining and a fluent API.
-
 ## License
 
 MIT License
