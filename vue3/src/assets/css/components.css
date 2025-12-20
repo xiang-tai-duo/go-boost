@@ -7,13 +7,15 @@
 
 /* General Style Definitions */
 :root {
-  --background-modal: rgba(226, 232, 240, 1);
+  --background-modal: rgba(226, 232, 240, 0.5);
+  --background-modal-title: rgba(206, 212, 220, 0.5);
   --background-primary: rgba(226, 232, 240, 0.5);
   --background-secondary: white;
   --border-color: #dddddd;
   --color-danger: #dc2626;
   --color-primary: #475569;
-  --color-primary-dark: #006b72;
+  --color-second: #006b72;
+  --color-title: #eaeaea;
   --font-primary: 14px;
   --nav-item-active-background-primary: rgba(59, 130, 246, 0.1);
 }
@@ -150,9 +152,24 @@
   color: #1e40af;
 }
 
-.btn-secondary:hover {
-  background-color: #e2e8f0;
-  border-color: var(--border-color);
+.btn-third {
+  background-color: var(--color-second);
+  color: white;
+  border: 0px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color 0.2s ease;
+  justify-content: center;
+}
+
+.btn-third:hover {
+  background-color: var(--color-second);
+  opacity: 0.9;
 }
 
 .btn-secondary:has(.close-icon),
@@ -171,21 +188,28 @@
   display: inline-block;
   position: relative;
   vertical-align: middle;
+  border-radius: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
 }
 
 .checkbox-primary:checked {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .checkbox-primary:checked::after {
-  content: '✓';
+  content: '\f00c';
+  font-family: 'FontAwesome';
   color: white;
-  font-size: 14px;
+  font-size: 12px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  font-weight: normal;
 }
 
 .checkbox-primary:disabled {
@@ -194,8 +218,8 @@
 }
 
 .checkbox-primary:disabled:checked {
-  background-color: #ccc;
-  border-color: #ccc;
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .checkbox-primary:hover {

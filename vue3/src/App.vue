@@ -24,7 +24,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import Sidebar from './components/sidebar/sidebar.vue'
+import Sidebar from './components/sidebar.vue'
 import Header from './components/dashboard/header.vue'
 import MainContent from './components/main.vue'
 
@@ -75,15 +75,15 @@ const sidebarHidden = ref(false)
   }
 
   .main-content-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    width: calc(100% - 250px);
-    transition: width 0.3s ease;
-    position: relative;
-    z-index: 1;
-  }
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: calc(100% - 250px);
+  transition: width 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
 
   .sidebar-hidden ~ .main-content-area {
     width: 100%;

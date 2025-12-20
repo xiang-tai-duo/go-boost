@@ -95,7 +95,7 @@
     </nav>
     <div class="sidebar-user-footer">
       <div class="sidebar-user-info">
-        <img src="../../assets/images/default-avatar.svg" alt="User Avatar" class="sidebar-avatar">
+        <img src="../assets/images/default-avatar.svg" alt="User Avatar" class="sidebar-avatar">
         <div class="user-details">
           <p class="sidebar-username text-shadow-sm">Admin</p>
           <a href="mailto:service@traecn.com" class="sidebar-user-email text-shadow-sm">
@@ -109,7 +109,7 @@
 
 <script setup>
 
-import {usePageNavigationStore} from '../../data-sources/sidebar/sidebar'
+import {usePageNavigationStore} from '../data-sources/sidebar.js'
 import {computed, onUnmounted, ref} from 'vue'
 
 const props = defineProps({
@@ -488,7 +488,7 @@ const openReportGeneration = () => {
 }
 
 .sidebar-icon {
-  color: #000000;
+  color: var(--color-danger);
   font-size: 26px;
   position: relative;
   top: -1px;

@@ -164,6 +164,7 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 
+/* Ensure consistent styling */
 .main-header {
   background-color: var(--background-primary);
   border-bottom: 1px solid var(--border-color);
@@ -179,7 +180,6 @@ onUnmounted(() => {
   margin-right: 8px;
   padding: 4px 8px;
   font-weight: 500;
-  background-color: var(--background-primary)
 }
 
 .logo {
@@ -246,7 +246,6 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 4px 8px;
-  background-color: var(--background-primary)
 }
 
 .date-time {
