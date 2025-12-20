@@ -1,0 +1,35 @@
+{
+  "RT_GROUP_ICON": {
+    "APP": {
+      "0000": [
+        "icon.png"
+      ]
+    }
+  },
+  "RT_VERSION": {
+    "#1": {
+      "0000": {
+        "fixed": {
+          "file_version": "1.0.0.0",
+          "product_version": "1.0.0.0"
+        },
+        "info": {
+          "0409": {
+            "Comments": "Go Boost",
+            "CompanyName": "Go Boost",
+            "FileDescription": "Go Boost",
+            "FileVersion": "1.0.0.0",
+            "InternalName": "Go Boost",
+            "LegalCopyright": "© 2026 Go Boost. All rights reserved.",
+            "LegalTrademarks": "",
+            "OriginalFilename": "go-boost.exe",
+            "PrivateBuild": "",
+            "ProductName": "Go Boost",
+            "ProductVersion": "1.0.0.0",
+            "SpecialBuild": ""
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+.DS_Store
+.idea
+.examples
+/electron/node_modules
+/electron/dist
+/electron/package-lock.json
+/electron/app.png
+/electron/package.json
+/electron/wwwroot/favicon.ico
