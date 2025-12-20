@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="res\fonts\LICENSE.txt" />
+    <None Remove="res\fonts\SourceHanSans-VF.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="res\fonts\LICENSE.txt" />
+    <EmbeddedResource Include="res\fonts\SourceHanSans-VF.ttf" />
+  </ItemGroup>
+
+</Project>

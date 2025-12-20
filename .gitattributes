@@ -1,0 +1,23 @@
+# Set all text files to use LF line endings
+* text=auto eol=lf
+
+# Ensure Go files use LF
+*.go text eol=lf
+
+# Ensure configuration files use LF
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+
+# Binary files should not be converted
+*.exe binary
+*.dll binary
+*.so binary
+*.zip binary
+*.tar.gz binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
