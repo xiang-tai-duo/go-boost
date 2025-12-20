@@ -1,0 +1,112 @@
+// --------------------------------------------------------------------------------
+// File:        json.go
+// Author:      TRAE AI
+// Created:     2025/12/20 12:31:58
+// Description: Example for JSON utility functions
+// --------------------------------------------------------------------------------
+
+package main
+
+import (
+	"fmt"
+
+	. "github.com/xiang-tai-duo/go-boost"
+)
+
+func main() {
+	// Create a JSON instance from a map
+	userMap := map[string]interface{}{
+		"name":  "John Doe",
+		"age":   30,
+		"email": "john@example.com",
+		"address": map[string]interface{}{
+			"street": "123 Main St",
+			"city":   "New York",
+			"zip":    "10001",
+		},
+	}
+	jsonObj := NewJSON(userMap)
+
+	// Get JSON string
+	jsonStr, err := jsonObj.Json()
+	if err == nil {
+		fmt.Println("Original JSON:", jsonStr)
+	}
+	// Format JSON with indentation
+	formatted, err := jsonObj.Format("  ")
+	if err == nil {
+		fmt.Println("\nFormatted JSON:")
+		fmt.Println(formatted)
+	}
+	// Minify JSON
+	minified, err := jsonObj.Minify()
+	if err == nil {
+		fmt.Println("\nMinified JSON:", minified)
+	}
+	// Validate JSON
+	isValid, err := jsonObj.Validate()
+	if err == nil {
+		fmt.Printf("\nJSON is valid: %v\n", isValid)
+	}
+	// Set value at path
+	jsonObj.SetValue("address.country", "USA")
+	jsonObj.SetValueInt("age", 31)
+	jsonObj.SetValueString("email", "john.doe@example.com")
+
+	// Get updated JSON
+	updatedJson, _ := jsonObj.Json()
+	fmt.Println("\nUpdated JSON:", updatedJson)
+
+	// Get specific values
+	name, _ := jsonObj.GetValueString("name")
+	age, _ := jsonObj.GetValueInt("age")
+	country, _ := jsonObj.GetValueString("address.country")
+
+	fmt.Printf("\nRetrieved values:\n")
+	fmt.Printf("Name: %s\n", name)
+	fmt.Printf("Age: %d\n", age)
+	fmt.Printf("Country: %s\n", country)
+
+	// Get all values at a path
+	addressValues, _ := jsonObj.GetValues("address")
+	fmt.Printf("\nAddress values: %v\n", addressValues)
+
+	// Unmarshal JSON into a struct
+	type Address struct {
+		Street  string `json:"street"`
+		City    string `json:"city"`
+		Zip     string `json:"zip"`
+		Country string `json:"country"`
+	}
+	type User struct {
+		Name    string  `json:"name"`
+		Age     int     `json:"age"`
+		Email   string  `json:"email"`
+		Address Address `json:"address"`
+	}
+
+	var user User
+	err = jsonObj.Unmarshal(&user)
+	if err == nil {
+		fmt.Printf("\nUnmarshaled User:\n")
+		fmt.Printf("Name: %s\n", user.Name)
+		fmt.Printf("Age: %d\n", user.Age)
+		fmt.Printf("Email: %s\n", user.Email)
+		fmt.Printf("Address: %s, %s, %s, %s\n", user.Address.Street, user.Address.City, user.Address.Zip, user.Address.Country)
+	}
+
+	// Create JSON from string
+	jsonStr2 := `{"product":"Laptop","price":999.99,"inStock":true}`
+	jsonObj2 := NewJSON(jsonStr2)
+	formatted2, _ := jsonObj2.Format("  ")
+	fmt.Println("\nJSON from string:")
+	fmt.Println(formatted2)
+
+	// Write JSON to file
+	err = jsonObj.WriteFile("./user.json", "  ")
+	if err == nil {
+		fmt.Println("\nJSON written to user.json")
+	} else {
+		fmt.Printf("Error writing to file: %v\n", err)
+	}
+}
