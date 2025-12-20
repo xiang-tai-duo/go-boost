@@ -28,15 +28,6 @@ Install go-boost using the standard Go get command.
 
 go-boost follows an object-oriented design with structs for each functionality area, supporting method chaining and a fluent API.
 
-## WebSocket Support
-
-go-boost provides comprehensive WebSocket functionality, including:
-
-- WebSocket server with easy setup
-- WebSocket client with reconnect support
-- Message handling and event processing
-- Random available port generation for server startup
-
 ## License
 
 MIT License
