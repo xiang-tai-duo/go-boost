@@ -1,0 +1,22 @@
+/* --------------------------------------------------------------------------------
+ * File:        package.json
+ * Author:      TRAE AI
+ * Created:     2025/12/20 12:31:58
+ * Description: Package configuration file for Electron application.
+ * --------------------------------------------------------------------------------
+ */
+{
+  "name": "electron-example",
+  "version": "1.0.0",
+  "description": "Simple Electron example",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^28.0.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}

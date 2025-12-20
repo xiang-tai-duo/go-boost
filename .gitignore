@@ -1,0 +1,12 @@
+.DS_Store
+.tmp
+examples/.tmp
+vue3/node_modules
+vue3/.vite
+vue3/dist
+Logs/
+/bin/mingw-w64-v11.0.0
+/bin/mingw32.zip
+/bin/mingw64.zip
+/bin/mingw32
+/.idea
