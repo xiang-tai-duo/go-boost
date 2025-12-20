@@ -1,4 +1,7 @@
 .DS_Store
+.tmp
+examples/.tmp
 vue3/node_modules
 vue3/.vite
 vue3/dist
+Logs/
