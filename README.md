@@ -10,19 +10,19 @@ go-boost is a comprehensive Go toolkit designed to simplify common operations in
 
 ## Key Capabilities
 
-- String processing utilities with extensive methods
-- File path utilities for path manipulation
-- File and directory operations
-- Cross-platform operating system utilities
-- Process management and information retrieval
 - Advanced logging system with multiple levels and encryption
-- Debugger detection utilities
+- Cross-platform operating system utilities
 - Database wrapper with SQLite support
-- HTTP server utilities for easy server setup
+- Debugger detection utilities
+- File and directory operations
+- File path utilities for path manipulation
 - HTTP client utilities
-- WebSocket client and server functionality
-- MQTT client implementation
+- HTTP server utilities for easy server setup
 - JSON operations and utilities
+- MQTT client implementation
+- Process management and information retrieval
+- String processing utilities with extensive methods
+- WebSocket client and server functionality
 
 ## License
 
