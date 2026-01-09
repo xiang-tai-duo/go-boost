@@ -1,0 +1,3 @@
+[submodule "bin/w64devkit"]
+	path = bin/w64devkit
+	url = https://github.com/skeeto/w64devkit
