@@ -170,7 +170,6 @@ const (
 	SHOW                              = "SHOW"
 	SQLITE_DATABASE_DEFAULT_PASSWORD  = "sa"
 	TCP                               = "tcp"
-	TLS_HANDSHAKE_ERROR_WAIT_DURATION = 50 * time.Millisecond
 	WAIT_CLIENT_TIMEOUT               = 5 * time.Second
 	WAIT_RETRY_INTERVAL               = 10 * time.Millisecond
 	WEBAPI_PATH_SALT                  = "/api/salt"
