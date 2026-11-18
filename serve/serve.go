@@ -1162,7 +1162,7 @@ func createTLSConfig() (*tls.Config, error) {
 			result.ClientAuth = tls.RequireAndVerifyClientCert
 			result.ClientCAs = tlsClientCAPool
 		} else {
-			result.ClientAuth = tls.RequestClientCert
+			result.ClientAuth = tls.NoClientCert
 		}
 	}
 	return result, err
