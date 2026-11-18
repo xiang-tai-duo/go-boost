@@ -1895,6 +1895,55 @@ func MatchPath(pattern string, path string) bool {
 	return result
 }
 
+func serveCookieSecure() bool {
+	return tlsServerListener != nil
+}
+
+func SetCookie(w http.ResponseWriter, name string, value string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     ROOT_ROUTE,
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   serveCookieSecure(),
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func ClearCookie(w http.ResponseWriter, name string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     ROOT_ROUTE,
+		MaxAge:   -1,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func CookieValue(r *http.Request, name string) string {
+	result := ""
+	if cookie, err := r.Cookie(name); err == nil {
+		result = cookie.Value
+	}
+	return result
+}
+
+func HasCookie(r *http.Request, name string) bool {
+	return CookieValue(r, name) != ""
+}
+
+func RequireCookie(name string, redirect string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if HasCookie(r, name) {
+			next(w, r)
+			return
+		}
+		http.Redirect(w, r, redirect, http.StatusFound)
+	}
+}
+
 func registerRequestHandler() {
 	serveMutex.Lock()
 	if !requestHandlerRegistered {
