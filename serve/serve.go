@@ -35,9 +35,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tus/tusd/v2/pkg/filelocker"
-	"github.com/tus/tusd/v2/pkg/filestore"
-	tushandler "github.com/tus/tusd/v2/pkg/handler"
 	"github.com/xiang-tai-duo/go-boost/ca"
 	"github.com/xiang-tai-duo/go-boost/hash"
 	"github.com/xiang-tai-duo/go-boost/logger"
@@ -51,7 +48,6 @@ type (
 	BEFORE_REQUEST_HANDLER      func(request *http.Request, response http.ResponseWriter) bool
 	BEFORE_ROUTE_HANDLER        func(request *http.Request, response http.ResponseWriter) bool
 	BEFORE_SERVE_STATIC_HANDLER func(request *http.Request, response http.ResponseWriter) bool
-	BEFORE_TUSD_HANDLER         func(request *http.Request, response http.ResponseWriter) bool
 	HTTP_RESPONSE               struct {
 		Message string `json:"message,omitempty"`
 		Success bool   `json:"success"`
@@ -70,23 +66,12 @@ type (
 		BeforeRequestHandlers     []BEFORE_REQUEST_HANDLER
 		BeforeRouteHandlers       []BEFORE_ROUTE_HANDLER
 		BeforeServeStaticHandlers []BEFORE_SERVE_STATIC_HANDLER
-		BeforeTusdHandlers        []BEFORE_TUSD_HANDLER
 		EmbedDirectories          map[string]embed.FS
 		ProtectedPatterns         []string
 		IgnoredProtectionPatterns []string
 		Routes                    []ROUTE
 		StaticDirectories         map[string]string
-		TusdMounts                map[string]*TUSD_MOUNT
 	}
-	TUSD_MOUNT struct {
-		DirectoryPath   string
-		Handler         *tushandler.Handler
-		MaxSize         int64
-		TargetDirectory string
-		UploadedHandler TUSD_UPLOADED_HANDLER
-		Uri             string
-	}
-	TUSD_UPLOADED_HANDLER func(uri string, uploadedFilePath string, fileName string, fileInfo tushandler.FileInfo)
 )
 
 //goland:noinspection GoSnakeCaseUsage,GoUnusedConst,GoNameStartsWithPackageName,SpellCheckingInspection,SqlResolve,SqlDialectInspection
@@ -198,7 +183,6 @@ var (
 	beforeRequestHandlers         []BEFORE_REQUEST_HANDLER
 	beforeRouteHandlers           []BEFORE_ROUTE_HANDLER
 	beforeServeStaticHandlers     []BEFORE_SERVE_STATIC_HANDLER
-	beforeTusdHandlers            []BEFORE_TUSD_HANDLER
 	embedDirectories              map[string]embed.FS
 	errorHandler                  func(error)
 	htmlListDirectoryTemplate     string
@@ -231,9 +215,6 @@ var (
 	tlsServerCancel               __context.CancelFunc
 	tlsServerContext              __context.Context
 	tlsServerListener             net.Listener
-	tusdMounts                    map[string]*TUSD_MOUNT
-	tusdEnabled                   bool
-	tusdMutex                     sync.Mutex
 )
 
 //goland:noinspection GoUnusedExportedFunction,SpellCheckingInspection
@@ -289,7 +270,6 @@ func init() {
 	protectedPatterns = []string{DEFAULT_PROTECTED_PATTERN}
 	ignoredProtectionPatterns = []string{WEBAPI_PATH_SALT}
 	tlsClientCAPool = loadDefaultCertificatePool()
-	tusdMounts = make(map[string]*TUSD_MOUNT)
 	revokedCertificates = make(map[string]bool)
 	loadServeConfig()
 	salt = generateRandomSalt()
@@ -651,24 +631,6 @@ func GetTlsWriteTimeout() time.Duration {
 	return result
 }
 
-//goland:noinspection GoUnusedExportedFunction,SpellCheckingInspection
-func GetTusdMount(uri string) *TUSD_MOUNT {
-	var result *TUSD_MOUNT
-	tusdMutex.Lock()
-	result = tusdMounts[uri]
-	tusdMutex.Unlock()
-	return result
-}
-
-//goland:noinspection GoUnusedExportedFunction
-func GetTusdEnabled() bool {
-	result := false
-	serveMutex.Lock()
-	result = tusdEnabled
-	serveMutex.Unlock()
-	return result
-}
-
 //goland:noinspection GoUnusedExportedFunction
 func GetWriteTimeout() time.Duration {
 	result := time.Duration(0)
@@ -791,46 +753,34 @@ func ListenAsync() error {
 		server.Addr = resolveAddressPort(server.Addr)
 		serverAddr = server.Addr
 		serveMutex.Unlock()
-		__debug("Initializing TUSd mounts")
-		if tusdEnabled {
-			if result = initializeTusdMounts(); result == nil {
-				__debug("TUSd mounts initialized successfully")
-			} else {
-				__debug("Failed to initialize TUSd mounts: " + result.Error())
-			}
-		} else {
-			__debug("TUSd disabled, skipping initialization")
-		}
-		if result == nil {
-			registerRequestHandler()
-			go func() {
-				__debug(fmt.Sprintf("Attempting to listen on TCP network: %s", serverAddr))
-				var listener net.Listener
-				var err error
-				if listener, err = net.Listen(TCP, serverAddr); err == nil {
-					__debug("TCP listener created successfully")
-					serveMutex.Lock()
-					serverListener = listener
-					serveMutex.Unlock()
-					__debug("Starting HTTP server")
-					if err = http.Serve(serverListener, nil); !errors.Is(err, http.ErrServerClosed) {
-						__debug("HTTP server error occurred: " + err.Error())
-						if errorHandler != nil {
-							__debug("Calling error handler")
-							errorHandler(err)
-						}
-					} else {
-						__debug("HTTP server closed normally")
+		registerRequestHandler()
+		go func() {
+			__debug(fmt.Sprintf("Attempting to listen on TCP network: %s", serverAddr))
+			var listener net.Listener
+			var err error
+			if listener, err = net.Listen(TCP, serverAddr); err == nil {
+				__debug("TCP listener created successfully")
+				serveMutex.Lock()
+				serverListener = listener
+				serveMutex.Unlock()
+				__debug("Starting HTTP server")
+				if err = http.Serve(serverListener, nil); !errors.Is(err, http.ErrServerClosed) {
+					__debug("HTTP server error occurred: " + err.Error())
+					if errorHandler != nil {
+						__debug("Calling error handler")
+						errorHandler(err)
 					}
 				} else {
-					__debug("Failed to create TCP listener: " + err.Error())
+					__debug("HTTP server closed normally")
 				}
-				serveMutex.Lock()
-				serverListener = nil
-				serveMutex.Unlock()
-				__debug("Server listener cleared")
-			}()
-		}
+			} else {
+				__debug("Failed to create TCP listener: " + err.Error())
+			}
+			serveMutex.Lock()
+			serverListener = nil
+			serveMutex.Unlock()
+			__debug("Server listener cleared")
+		}()
 	}
 	if result == nil {
 		__debug("Waiting for server to be ready")
@@ -847,42 +797,31 @@ func ListenTlsAsync(address string) error {
 	serveMutex.Lock()
 	if tlsServerListener == nil {
 		serveMutex.Unlock()
-		if tusdEnabled {
-			if result = initializeTusdMounts(); result == nil {
-				__debug("TUSd mounts initialized successfully")
-			} else {
-				__debug("Failed to initialize TUSd mounts: " + result.Error())
-			}
-		} else {
-			__debug("TUSd disabled, skipping initialization")
-		}
-		if result == nil {
-			registerRequestHandler()
-			go func() {
-				err := error(nil)
-				var tlsConfig *tls.Config
-				if tlsConfig, err = createTLSConfig(); err == nil {
-					var listener net.Listener
-					if listener, err = tls.Listen(TCP, resolvedAddress, tlsConfig); err == nil {
-						serveMutex.Lock()
-						tlsServerListener = listener
-						serveMutex.Unlock()
-						err = http.Serve(tlsServerListener, nil)
-					}
-				}
-				if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		registerRequestHandler()
+		go func() {
+			err := error(nil)
+			var tlsConfig *tls.Config
+			if tlsConfig, err = createTLSConfig(); err == nil {
+				var listener net.Listener
+				if listener, err = tls.Listen(TCP, resolvedAddress, tlsConfig); err == nil {
 					serveMutex.Lock()
-					handler := errorHandler
+					tlsServerListener = listener
 					serveMutex.Unlock()
-					if handler != nil {
-						handler(err)
-					}
+					err = http.Serve(tlsServerListener, nil)
 				}
+			}
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
 				serveMutex.Lock()
-				tlsServerListener = nil
+				handler := errorHandler
 				serveMutex.Unlock()
-			}()
-		}
+				if handler != nil {
+					handler(err)
+				}
+			}
+			serveMutex.Lock()
+			tlsServerListener = nil
+			serveMutex.Unlock()
+		}()
 	} else {
 		result = fmt.Errorf("TLS server is already running")
 		serveMutex.Unlock()
@@ -898,23 +837,13 @@ func ListenTlsAsync(address string) error {
 //goland:noinspection GoUnusedExportedFunction
 func On(method string, pattern string, handler REQUEST_HANDLER) error {
 	result := error(nil)
-	tusdMutex.Lock()
-	for basePath := range tusdMounts {
-		if isPathInUseForTusd(pattern, basePath) {
-			result = fmt.Errorf("pattern %s conflicts with TUSD mount point %s", pattern, basePath)
-			break
-		}
-	}
-	tusdMutex.Unlock()
-	if result == nil {
-		serveMutex.Lock()
-		routes = append(routes, ROUTE{
-			Method:  method,
-			Pattern: pattern,
-			Handler: handler,
-		})
-		serveMutex.Unlock()
-	}
+	serveMutex.Lock()
+	routes = append(routes, ROUTE{
+		Method:  method,
+		Pattern: pattern,
+		Handler: handler,
+	})
+	serveMutex.Unlock()
 	return result
 }
 
@@ -946,49 +875,11 @@ func OnBeforeStaticServe(handler BEFORE_SERVE_STATIC_HANDLER) {
 	beforeServeStaticHandlers = append(beforeServeStaticHandlers, handler)
 }
 
-//goland:noinspection GoUnusedExportedFunction,SpellCheckingInspection
-func OnBeforeTusd(handler BEFORE_TUSD_HANDLER) {
-	serveMutex.Lock()
-	defer serveMutex.Unlock()
-	beforeTusdHandlers = append(beforeTusdHandlers, handler)
-}
-
 //goland:noinspection GoUnusedExportedFunction
 func OnError(handler func(error)) {
 	serveMutex.Lock()
 	defer serveMutex.Unlock()
 	errorHandler = handler
-}
-
-//goland:noinspection GoUnusedExportedFunction,SpellCheckingInspection
-func OnTusd(uri string, directoryPath string, handler TUSD_UPLOADED_HANDLER) error {
-	result := error(nil)
-	if !strings.HasPrefix(uri, ROOT_ROUTE) {
-		uri = ROOT_ROUTE + uri
-	}
-	if !strings.HasSuffix(uri, ROOT_ROUTE) {
-		uri = uri + ROOT_ROUTE
-	}
-	serveMutex.Lock()
-	for _, route := range routes {
-		if isPathInUseForTusd(route.Pattern, uri) {
-			result = fmt.Errorf("TUSD mount %s conflicts with existing route %s", uri, route.Pattern)
-			break
-		}
-	}
-	serveMutex.Unlock()
-	if result == nil {
-		tusdMutex.Lock()
-		tusdMounts[uri] = &TUSD_MOUNT{
-			Uri:             uri,
-			DirectoryPath:   directoryPath,
-			MaxSize:         0,
-			TargetDirectory: "",
-			UploadedHandler: handler,
-		}
-		tusdMutex.Unlock()
-	}
-	return result
 }
 
 //goland:noinspection GoUnusedExportedFunction
@@ -1036,13 +927,6 @@ func RemoveStaticDirectoryMapping(urlPath string) {
 	serveMutex.Lock()
 	defer serveMutex.Unlock()
 	delete(staticDirectories, urlPath)
-}
-
-//goland:noinspection GoUnusedExportedFunction,SpellCheckingInspection
-func RemoveTusdMount(uri string) {
-	tusdMutex.Lock()
-	defer tusdMutex.Unlock()
-	delete(tusdMounts, uri)
 }
 
 //goland:noinspection GoUnusedExportedFunction
@@ -1158,27 +1042,6 @@ func SetTlsWriteTimeout(timeout time.Duration) {
 	tlsServer.WriteTimeout = timeout
 }
 
-//goland:noinspection GoUnusedExportedFunction,SpellCheckingInspection
-func SetTusdMount(basePath string, maxSize int64, targetDirectory string) error {
-	result := error(nil)
-	tusdMutex.Lock()
-	if mount, ok := tusdMounts[basePath]; ok {
-		mount.MaxSize = maxSize
-		mount.TargetDirectory = targetDirectory
-	} else {
-		result = fmt.Errorf("TUSD mount %s does not exist", basePath)
-	}
-	tusdMutex.Unlock()
-	return result
-}
-
-//goland:noinspection GoUnusedExportedFunction
-func SetTusdEnabled(enabled bool) {
-	serveMutex.Lock()
-	tusdEnabled = enabled
-	serveMutex.Unlock()
-}
-
 //goland:noinspection GoUnusedExportedFunction
 func SetWriteTimeout(timeout time.Duration) {
 	serveMutex.Lock()
@@ -1207,7 +1070,6 @@ func createConfigurationSnapshot() STATE_SNAPSHOT {
 	result.BeforeRequestHandlers = make([]BEFORE_REQUEST_HANDLER, len(beforeRequestHandlers))
 	result.BeforeRouteHandlers = make([]BEFORE_ROUTE_HANDLER, len(beforeRouteHandlers))
 	result.BeforeServeStaticHandlers = make([]BEFORE_SERVE_STATIC_HANDLER, len(beforeServeStaticHandlers))
-	result.BeforeTusdHandlers = make([]BEFORE_TUSD_HANDLER, len(beforeTusdHandlers))
 	result.AfterServeStaticHandlers = make([]AFTER_SERVE_STATIC_HANDLER, len(afterServeStaticHandlers))
 	result.ProtectedPatterns = append([]string(nil), protectedPatterns...)
 	result.IgnoredProtectionPatterns = append([]string(nil), ignoredProtectionPatterns...)
@@ -1223,15 +1085,8 @@ func createConfigurationSnapshot() STATE_SNAPSHOT {
 	copy(result.BeforeRequestHandlers, beforeRequestHandlers)
 	copy(result.BeforeRouteHandlers, beforeRouteHandlers)
 	copy(result.BeforeServeStaticHandlers, beforeServeStaticHandlers)
-	copy(result.BeforeTusdHandlers, beforeTusdHandlers)
 	copy(result.AfterServeStaticHandlers, afterServeStaticHandlers)
 	serveMutex.Unlock()
-	tusdMutex.Lock()
-	result.TusdMounts = make(map[string]*TUSD_MOUNT)
-	for key, value := range tusdMounts {
-		result.TusdMounts[key] = value
-	}
-	tusdMutex.Unlock()
 	return result
 }
 
@@ -1663,7 +1518,6 @@ func (w *responseWriterWrapper) Write(data []byte) (int, error) {
 func handleRequest(responseWriter http.ResponseWriter, request *http.Request) {
 	snapshot := createConfigurationSnapshot()
 	isRequestForbidden := false
-	isTusdHandled := false
 	isRouteHandled := false
 	runBeforeRequestHandlers := func() bool {
 		result := false
@@ -1774,36 +1628,6 @@ func handleRequest(responseWriter http.ResponseWriter, request *http.Request) {
 		}
 		return result
 	}
-	runBeforeTusdHandlers := func() bool {
-		result := false
-		for _, handler := range snapshot.BeforeTusdHandlers {
-			if !handler(request, responseWriter) {
-				result = true
-				break
-			}
-		}
-		return result
-	}
-	handleTusdRequest := func() bool {
-		result := false
-		if tusdMount := searchTusdMount(snapshot.TusdMounts, request.URL.Path); tusdMount != nil && tusdMount.Handler != nil {
-			if runBeforeTusdHandlers() {
-				result = true
-			} else {
-				strippedPath := strings.TrimPrefix(request.URL.Path, tusdMount.Uri)
-				if strippedPath == request.URL.Path {
-					strippedPath = strings.TrimPrefix(request.URL.Path, strings.TrimSuffix(tusdMount.Uri, ROOT_ROUTE))
-				}
-				if strippedPath == "" {
-					strippedPath = ROOT_ROUTE
-				}
-				request.URL.Path = strippedPath
-				tusdMount.Handler.ServeHTTP(responseWriter, request)
-				result = true
-			}
-		}
-		return result
-	}
 	runBeforeRouteHandlers := func() bool {
 		result := false
 		for _, handler := range snapshot.BeforeRouteHandlers {
@@ -1867,53 +1691,14 @@ func handleRequest(responseWriter http.ResponseWriter, request *http.Request) {
 		isRequestForbidden = validateProtectedRequest()
 	}
 	if !isRequestForbidden {
-		isTusdHandled = handleTusdRequest()
-	}
-	if !isRequestForbidden && !isTusdHandled {
 		isRouteHandled = handleRouteRequest()
 	}
-	if !isRequestForbidden && !isTusdHandled && !isRouteHandled {
+	if !isRequestForbidden && !isRouteHandled {
 		handleStaticRequest()
 	}
 }
 
 //goland:noinspection SpellCheckingInspection
-func handleTusdCompleted(mount *TUSD_MOUNT, event tushandler.HookEvent) {
-	__debug(fmt.Sprintf("TUSd upload completed - ID: %s, MetaData: %v", event.Upload.ID, event.Upload.MetaData))
-	uploadedFilePath := filepath.Join(mount.DirectoryPath, event.Upload.ID)
-	targetFileName := event.Upload.ID
-	targetDirectory := mount.DirectoryPath
-	if mount.TargetDirectory != "" {
-		targetDirectory = mount.TargetDirectory
-	}
-	fileName := event.Upload.ID
-	if name, ok := event.Upload.MetaData[FILENAME_KEY]; ok && name != "" {
-		fileName = name
-	}
-	var err error
-	if err = os.MkdirAll(targetDirectory, DEFAULT_DIRECTORY_PERMISSION); err != nil {
-		__debug(fmt.Sprintf("Failed to create target directory: %s, error: %v", targetDirectory, err))
-	}
-	targetFilePath := filepath.Join(targetDirectory, fileName)
-	if _, err = os.Stat(targetFilePath); err == nil {
-		extension := filepath.Ext(fileName)
-		baseName := fileName[:len(fileName)-len(extension)]
-		counter := 1
-		for {
-			newFileName := fmt.Sprintf(FILE_RENAME_FORMAT, baseName, counter, extension)
-			targetFilePath = filepath.Join(targetDirectory, newFileName)
-			if _, err = os.Stat(targetFilePath); os.IsNotExist(err) {
-				break
-			}
-			counter++
-		}
-	}
-	targetFileName = filepath.Base(targetFilePath)
-	if mount.UploadedHandler != nil {
-		mount.UploadedHandler(mount.Uri, uploadedFilePath, targetFileName, event.Upload)
-	}
-}
-
 func initializeSqliteDatabase() {
 	sqliteDatabaseFilePath = getSqliteDatabaseFilePath()
 	sqliteDatabase = sqlite.New()
@@ -1945,68 +1730,6 @@ func initializeSqliteDatabase() {
 	}
 }
 
-//goland:noinspection SpellCheckingInspection
-func initializeTusdMounts() error {
-	result := error(nil)
-	tusdMutex.Lock()
-	mounts := make(map[string]*TUSD_MOUNT)
-	for key, value := range tusdMounts {
-		mounts[key] = value
-	}
-	tusdMutex.Unlock()
-	for uri, mount := range mounts {
-		if mount.Handler == nil {
-			if result = os.MkdirAll(mount.DirectoryPath, DEFAULT_DIRECTORY_PERMISSION); result == nil {
-				store := filestore.New(mount.DirectoryPath)
-				locker := filelocker.New(mount.DirectoryPath)
-				composer := tushandler.NewStoreComposer()
-				store.UseIn(composer)
-				locker.UseIn(composer)
-				handlerConfig := tushandler.Config{
-					StoreComposer:           composer,
-					BasePath:                uri,
-					MaxSize:                 mount.MaxSize,
-					NotifyCompleteUploads:   true,
-					NotifyTerminatedUploads: true,
-					NotifyUploadProgress:    true,
-					NotifyCreatedUploads:    true,
-				}
-				var handler *tushandler.Handler
-				if handler, result = tushandler.NewHandler(handlerConfig); result == nil {
-					tusdMutex.Lock()
-					mount.Handler = handler
-					tusdMutex.Unlock()
-					currentMount := mount
-					go func() {
-						for event := range currentMount.Handler.CompleteUploads {
-							__debug(fmt.Sprintf("Tusd CompleteUploads event - URI: %s, ID: %s, Size: %d, Offset: %d, MetaData: %v", currentMount.Uri, event.Upload.ID, event.Upload.Size, event.Upload.Offset, event.Upload.MetaData))
-							handleTusdCompleted(currentMount, event)
-						}
-					}()
-					go func() {
-						for event := range currentMount.Handler.TerminatedUploads {
-							__debug(fmt.Sprintf("Tusd TerminatedUploads event - URI: %s, ID: %s, Size: %d, Offset: %d, MetaData: %v", currentMount.Uri, event.Upload.ID, event.Upload.Size, event.Upload.Offset, event.Upload.MetaData))
-						}
-					}()
-					go func() {
-						for event := range currentMount.Handler.UploadProgress {
-							__debug(fmt.Sprintf("Tusd UploadProgress event - URI: %s, ID: %s, Size: %d, Offset: %d, MetaData: %v", currentMount.Uri, event.Upload.ID, event.Upload.Size, event.Upload.Offset, event.Upload.MetaData))
-						}
-					}()
-					go func() {
-						for event := range currentMount.Handler.CreatedUploads {
-							__debug(fmt.Sprintf("Tusd CreatedUploads event - URI: %s, ID: %s, Size: %d, Offset: %d, MetaData: %v", currentMount.Uri, event.Upload.ID, event.Upload.Size, event.Upload.Offset, event.Upload.MetaData))
-						}
-					}()
-				}
-			} else {
-				break
-			}
-		}
-	}
-	return result
-}
-
 func isCertificateRevoked(certificate *x509.Certificate) bool {
 	result := false
 	if certificate != nil {
@@ -2016,24 +1739,6 @@ func isCertificateRevoked(certificate *x509.Certificate) bool {
 			result = true
 		}
 		revokedCertificatesMutex.RUnlock()
-	}
-	return result
-}
-
-//goland:noinspection SpellCheckingInspection
-func isPathInUseForTusd(pattern string, tusdBasePath string) bool {
-	result := false
-	if pattern == tusdBasePath || pattern == strings.TrimSuffix(tusdBasePath, ROOT_ROUTE) {
-		result = true
-	}
-	if !result && strings.HasPrefix(pattern, tusdBasePath) {
-		result = true
-	}
-	if !result && strings.HasSuffix(pattern, WILDCARD_SUFFIX) {
-		prefix := strings.TrimSuffix(pattern, WILDCARD_SUFFIX)
-		if strings.HasPrefix(tusdBasePath, prefix+ROOT_ROUTE) || tusdBasePath == prefix+ROOT_ROUTE {
-			result = true
-		}
 	}
 	return result
 }
@@ -2222,21 +1927,6 @@ func searchEmbedFilePath(embedFileSystem embed.FS, filePath string) (fs.FileInfo
 		}
 	}
 	return result, embedFilePath, err
-}
-
-//goland:noinspection SpellCheckingInspection
-func searchTusdMount(mounts map[string]*TUSD_MOUNT, path string) *TUSD_MOUNT {
-	var result *TUSD_MOUNT
-	bestLength := 0
-	for basePath, mount := range mounts {
-		if strings.HasPrefix(path, basePath) || path == strings.TrimSuffix(basePath, ROOT_ROUTE) {
-			if len(basePath) > bestLength {
-				result = mount
-				bestLength = len(basePath)
-			}
-		}
-	}
-	return result
 }
 
 //goland:noinspection SpellCheckingInspection
