@@ -2189,10 +2189,6 @@ func waitServeTls(address string) {
 		var connection *tls.Conn
 		err := error(nil)
 		if connection, err = tls.Dial(TCP, address, &tls.Config{InsecureSkipVerify: true}); err == nil {
-			go func() {
-				time.Sleep(TLS_HANDSHAKE_ERROR_WAIT_DURATION)
-				__warning("The error can be safely ignored: 'http: TLS handshake error from 127.0.0.1:56402: tls: client didn't provide a certificate'")
-			}()
 			_ = connection.Close()
 			break
 		}
