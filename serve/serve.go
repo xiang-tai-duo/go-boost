@@ -183,6 +183,8 @@ var (
 	beforeRequestHandlers         []BEFORE_REQUEST_HANDLER
 	beforeRouteHandlers           []BEFORE_ROUTE_HANDLER
 	beforeServeStaticHandlers     []BEFORE_SERVE_STATIC_HANDLER
+	customCertificatePath         string
+	customPrivateKeyPath          string
 	embedDirectories              map[string]embed.FS
 	errorHandler                  func(error)
 	htmlListDirectoryTemplate     string
@@ -937,6 +939,14 @@ func SetAddress(address string) {
 }
 
 //goland:noinspection GoUnusedExportedFunction
+func SetCertificateFiles(certificatePath string, keyPath string) {
+	serveMutex.Lock()
+	defer serveMutex.Unlock()
+	customCertificatePath = certificatePath
+	customPrivateKeyPath = keyPath
+}
+
+//goland:noinspection GoUnusedExportedFunction
 func SetContext(context __context.Context) {
 	serveMutex.Lock()
 	if serverCancel != nil {
@@ -1113,8 +1123,16 @@ func createTLSConfig() (*tls.Config, error) {
 	var result *tls.Config
 	err := error(nil)
 	certificate := tls.Certificate{}
-	certificatePath := findCertificateFile(ca.SERVER_CERTIFICATE_FILE_NAME)
-	privateKeyPath := findCertificateFile(ca.SERVER_PRIVATE_KEY_FILE_NAME)
+	serveMutex.Lock()
+	certificatePath := customCertificatePath
+	privateKeyPath := customPrivateKeyPath
+	serveMutex.Unlock()
+	if certificatePath == "" {
+		certificatePath = findCertificateFile(ca.SERVER_CERTIFICATE_FILE_NAME)
+	}
+	if privateKeyPath == "" {
+		privateKeyPath = findCertificateFile(ca.SERVER_PRIVATE_KEY_FILE_NAME)
+	}
 	if certificatePath != "" && privateKeyPath != "" {
 		certificate, err = tls.LoadX509KeyPair(certificatePath, privateKeyPath)
 		if err == nil {
