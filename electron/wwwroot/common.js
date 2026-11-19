@@ -10,7 +10,7 @@ var DOCUMENT_EVENT_CLICK = 'click';
 var DOCUMENT_EVENT_KEYDOWN = 'keydown';
 var CSS_CLASS_HIDDEN = 'hidden';
 var JAVASCRIPT_TYPE_UNDEFINED = 'undefined';
-var TEXT_CONFIRM_BUTTON_OK = 'OK';
+var TEXT_CONFIRM_BUTTON_OK = '确定';
 var KEY_ESCAPE = 'Escape';
 var KEY_ENTER = 'Enter';
 
@@ -49,7 +49,7 @@ function createOverlayCore(overlayId, headerClass, bodyClass, messageClass, foot
     btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn-primary';
-    btn.innerHTML = '<i class="fas fa-check" style="margin-right:6px;"></i><span>' + TEXT_CONFIRM_BUTTON_OK + '</span>';
+    btn.textContent = TEXT_CONFIRM_BUTTON_OK;
     footer.appendChild(btn);
     panel.appendChild(header);
     panel.appendChild(body);
