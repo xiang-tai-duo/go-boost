@@ -1911,6 +1911,19 @@ func SetCookie(w http.ResponseWriter, name string, value string, maxAge int) {
 	})
 }
 
+//goland:noinspection GoUnusedExportedFunction
+func SetCookieForRequest(w http.ResponseWriter, r *http.Request, name string, value string, maxAge int) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     ROOT_ROUTE,
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   IsHttpsRequest(r),
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
 func ClearCookie(w http.ResponseWriter, name string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
@@ -1920,12 +1933,35 @@ func ClearCookie(w http.ResponseWriter, name string) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     ROOT_ROUTE,
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
 }
 
 func CookieValue(r *http.Request, name string) string {
 	result := ""
 	if cookie, err := r.Cookie(name); err == nil {
 		result = cookie.Value
+	}
+	return result
+}
+
+//goland:noinspection GoUnusedExportedFunction
+func CookieValues(r *http.Request, name string) []string {
+	result := make([]string, 0)
+	for _, header := range r.Header.Values("Cookie") {
+		for _, part := range strings.Split(header, ";") {
+			pair := strings.TrimSpace(part)
+			if prefix := name + "="; strings.HasPrefix(pair, prefix) {
+				result = append(result, strings.TrimPrefix(pair, prefix))
+			}
+		}
 	}
 	return result
 }
