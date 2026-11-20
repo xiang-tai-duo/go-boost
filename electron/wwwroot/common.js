@@ -3,15 +3,21 @@
 // Author:      TRAE.AI
 // Created:     2025/12/20 12:31:58
 // Description: Common helper functions for popup message boxes (error / warning / info).
+//              Rule §46: overlays are native <dialog> elements opened with showModal() —
+//              they enter the browser top layer above any other dialog, the rest of the
+//              document becomes inert while open (nothing underneath is clickable), and
+//              they close only via the confirm button, Enter or Escape — never by clicking
+//              the mask.
 // --------------------------------------------------------------------------------
 
 var DOCUMENT_TAG_DIVISION = 'div';
+var DOCUMENT_TAG_DIALOG = 'dialog';
 var DOCUMENT_EVENT_CLICK = 'click';
 var DOCUMENT_EVENT_KEYDOWN = 'keydown';
+var DIALOG_EVENT_CANCEL = 'cancel';
 var CSS_CLASS_HIDDEN = 'hidden';
 var JAVASCRIPT_TYPE_UNDEFINED = 'undefined';
 var TEXT_CONFIRM_BUTTON_OK = '确定';
-var KEY_ESCAPE = 'Escape';
 var KEY_ENTER = 'Enter';
 
 var popupOverlayMap = {};
@@ -26,7 +32,7 @@ function createOverlayCore(overlayId, headerClass, bodyClass, messageClass, foot
     var messageDiv = undefined;
     var footer = undefined;
     var btn = undefined;
-    overlay = document.createElement(DOCUMENT_TAG_DIVISION);
+    overlay = document.createElement(DOCUMENT_TAG_DIALOG);
     overlay.className = 'popup-overlay hidden';
     overlay.id = overlayId;
     panel = document.createElement(DOCUMENT_TAG_DIVISION);
@@ -63,6 +69,22 @@ function createOverlayCore(overlayId, headerClass, bodyClass, messageClass, foot
             overlay._callback();
         }
     });
+    // Rule §46: ESC is handled by the native cancel event (treated as clicking the
+    // confirm button); no click handler is registered on the mask, so clicking the
+    // mask has no effect at all.
+    overlay.addEventListener(DIALOG_EVENT_CANCEL, function (e) {
+        var primaryButton = undefined;
+        e.preventDefault();
+        if (overlay._blocking) {
+            return;
+        }
+        primaryButton = overlay.querySelector('.btn-primary');
+        if (primaryButton) {
+            primaryButton.click();
+        } else {
+            hideError(overlayId);
+        }
+    });
     return overlay;
 }
 
@@ -84,28 +106,21 @@ function findTopmostVisibleOverlay() {
 function handlePopupOverlayKeydown(e) {
     var overlay = undefined;
     var primaryButton = undefined;
-    if (e.key === KEY_ESCAPE || e.key === KEY_ENTER) {
-        overlay = findTopmostVisibleOverlay();
-        if (overlay) {
-            if (overlay._blocking) {
-                e.preventDefault();
-            } else {
-                primaryButton = overlay.querySelector('.btn-primary');
-                if (e.key === KEY_ENTER) {
-                    if (primaryButton) {
-                        e.preventDefault();
-                        primaryButton.click();
-                    }
-                } else {
-                    e.preventDefault();
-                    if (primaryButton) {
-                        primaryButton.click();
-                    } else {
-                        hideError(overlay.id);
-                    }
-                }
-            }
-        }
+    if (e.key !== KEY_ENTER) {
+        return;
+    }
+    overlay = findTopmostVisibleOverlay();
+    if (!overlay) {
+        return;
+    }
+    if (overlay._blocking) {
+        e.preventDefault();
+        return;
+    }
+    primaryButton = overlay.querySelector('.btn-primary');
+    if (primaryButton) {
+        e.preventDefault();
+        primaryButton.click();
     }
 }
 
@@ -115,6 +130,9 @@ function hideError(overlayId) {
         overlay = document.getElementById(overlayId);
     }
     if (overlay) {
+        if (overlay.open) {
+            overlay.close();
+        }
         overlay.classList.add(CSS_CLASS_HIDDEN);
         if (typeof coordinateOverlays !== JAVASCRIPT_TYPE_UNDEFINED) {
             coordinateOverlays();
@@ -148,6 +166,9 @@ function show(overlayId, headerClass, bodyClass, messageClass, footerClass, icon
             messageEl.innerHTML = message || '';
         }
         overlay.classList.remove(CSS_CLASS_HIDDEN);
+        if (!overlay.open) {
+            overlay.showModal();
+        }
         if (typeof coordinateOverlays !== JAVASCRIPT_TYPE_UNDEFINED) {
             coordinateOverlays();
         }
